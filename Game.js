@@ -4,6 +4,25 @@ let ctx = canvas.getContext("2d");
 let currentKey = new Map();
 let scoreElement = document.getElementById("score")
 let score = 0
+let StartButton = document.getElementById("Start")
+let SettingsButton = document.getElementById("Settings")
+let menu = document.getElementById("menu")
+let gameScreen = document.getElementById("fullscreen")
+let music = new Audio();
+let hit = new Audio();
+let shake = false;
+hit.src = "./hit.wav"
+music.src = "./music.mp3"
+hit.volume = 1;
+music.volume = 0.7;
+music.play();
+let mode = "menu"
+function shakeScreen() {
+    shake = true;
+    setTimeout(() => {
+        shake = false
+      }, 150);
+}
 function keyboardInit() {
     window.addEventListener("keydown", function (event) {
       currentKey.set(event.key, true);
@@ -53,6 +72,9 @@ class Ball {
         }
         if (this.bounds.intersects(paddle.bounds) || paddle.bounds.intersects(this.bounds)) {
             score += 1
+            shakeScreen();
+
+            hit.play();
             console.log("w")
             if (currentKey.get("a") || currentKey.get("ArrowLeft")) {
                 this.direction = 5
@@ -68,16 +90,44 @@ class Ball {
 }
 let paddle = new Paddle();
 let ball = new Ball();
-function loop() {   
+function loop() { 
+    ctx.save();
     ctx.clearRect(0,0,canvas.width,canvas.height)
+
+    if (shake) {
+        var dx = Math.random()*15;
+        var dy = Math.random()*15;
+        ctx.translate(dx, dy);
+    }
     scoreElement.innerHTML = score
-    paddle.draw();
-    paddle.update();
-    ball.draw();
-    ball.update();
+    if (mode === "menu") {
+        canvas.style.visibility = "hidden"
+    }
+    if (mode === "game") {
+        gameScreen.style.visibility = "visible"
+        canvas.style.visibility = "visible"
+        paddle.draw();
+        paddle.update();
+        ball.draw();
+        ball.update();
+    }
+    if (mode === "settings") {
+        menu.style.visibility = "hidden"
+        console.log("Settings Running")
+    }
+    ctx.restore();
     requestAnimationFrame(loop)
 }
 function init() {
+    StartButton.addEventListener("click", function () {
+        console.log("clicked")
+        mode = "game";
+      }); 
+      SettingsButton.addEventListener("click", function () {
+        console.log("clicked")
+        mode = "settings";
+        console.log("Settings")
+      });
     keyboardInit();
     loop();
 }
